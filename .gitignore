@@ -2,12 +2,4 @@
 
 .vscode/
 
-build/final_solitaire/Analysis-00.toc
-build/final_solitaire/base_library.zip
-build/final_solitaire/devilsgrip.pkg
-build/final_solitaire/EXE-00.toc
-build/final_solitaire/PKG-00.toc
-build/final_solitaire/PYZ-00.pyz
-build/final_solitaire/PYZ-00.toc
-build/final_solitaire/warn-final_solitaire.txt
-build/final_solitaire/xref-final_solitaire.html
+build/
