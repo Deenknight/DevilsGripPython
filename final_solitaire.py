@@ -51,7 +51,7 @@ class Signals(QObject):
     complete = pyqtSignal()
     clicked = pyqtSignal()
     decrement_counter = pyqtSignal()
-    get_from_deal = pyqtSignal()
+    get_from_deal = pyqtSignal(QGraphicsRectItem)
 
 
 class Card(QGraphicsPixmapItem):
@@ -317,8 +317,11 @@ class Work(Stack):
     removing card. 
     '''
     offset_x = 0
-    offset_y = 15*CARD_SCALE
+    offset_y = int(15*CARD_SCALE)
     offset_y_back = 5
+
+    def __init__(self):
+        super().__init__()
 
     def setup(self):
         self.signals = Signals()
@@ -366,17 +369,7 @@ class Work(Stack):
             card.stack = None
         
         if not self.cards:
-            self.signals.get_from_deal.emit(self)
-            if self.deckStack.cards:
-                card = self.deckStack.take_top_card()
-                if card:
-                    self.add_card(card)
-                    card.turn_face_up()
-                    self.signals.decrement_counter.emit()
-
-            elif self.deckStack.can_restack(self.rounds_n):
-                self.deckStack.restack(self.dealstack)
-                self.deckStack.update_stack_status(self.rounds_n)
+            card = self.signals.get_from_deal.emit(self)
 
         self.update()
 
@@ -565,10 +558,11 @@ class MainWindow(QMainWindow):
         self.works = []
         for r in range(ROWS):
             for n in range(COLUMNS):
-                stack = Work(self.deckstack, self.dealstack)
+                stack = Work()
                 stack.setPos(g_offset_x + self.cardStackSpace*(n+1) + card_spacer_x*(n), g_offset_y + 200*(r+1))
                 stack.signals.complete.connect(self.check_win_condition)
                 stack.signals.decrement_counter.connect(self.decrement_deck_counter)
+                stack.signals.get_from_deal.connect(self.get_from_deal)
                 self.scene.addItem(stack)
                 self.works.append(stack)
 
@@ -595,6 +589,28 @@ class MainWindow(QMainWindow):
         self.cardCountText.setPlainText("Cards left: " + str(len(self.deckstack.cards) + len(self.dealstack.cards)))
         self.cardCountText.update()
     
+    def get_from_deal(self, stack):
+        
+        if self.deckstack.cards:
+            card = self.deckstack.take_top_card()
+
+            if card:
+                stack.add_card(card)
+                card.turn_face_up()
+                self.decrement_deck_counter()
+
+        elif self.deckstack.can_restack(self.rounds_n):
+            self.deckstack.restack(self.dealstack)
+            self.deckstack.update_stack_status(self.rounds_n)
+
+            card = self.deckstack.take_top_card()
+
+            if card:
+                stack.add_card(card)
+                card.turn_face_up()
+                self.decrement_deck_counter()
+
+
     def quit(self):
         self.close()
 
